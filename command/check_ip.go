@@ -21,8 +21,9 @@ func main() {
 	defer db.Close()
 	db.SingularTable(true)
 	var proxys []model.Proxy
-	db.Where("status=?", 0).Find(&proxys)
-	pool := component.NewTaskPool(10)
+	db.Where("status<>?", 1).Find(&proxys)
+	fmt.Printf("count:%d, cap: %d\n", len(proxys), cap(proxys))
+	pool := component.NewTaskPool(20)
 	for _, proxy := range proxys {
 		var proxy_tmp model.Proxy = proxy
 		pool.RunTask(func() { CheckProxyStatus(proxy_tmp, db) })
@@ -35,12 +36,10 @@ func CheckProxyStatus(proxy model.Proxy, db *gorm.DB) {
 	fmt.Printf("start check :host:%s, port:%s\n", proxy.Host, proxy.Port)
 	result := CheckIp(proxy.Host, proxy.Port)
 	fmt.Printf("%s, %s, the result is %v\n", proxy.Host, proxy.Port, result)
-	if !result {
-		proxy.Status = 0
-	} else {
+	if result {
 		proxy.Status = 1
+		db.Save(&proxy)
 	}
-	db.Save(&proxy)
 }
 
 func CheckIp(host, port string) bool {
