@@ -8,9 +8,9 @@ type Proxy struct {
 	Host       string `gorm:"column:host"`
 	Port       string
 	Status     int8   `gorm:"column:status"`
-	CreateTime int    `gorm:"column:create_time"`
-	UpdateTime int    `gorm:"column:update_time"`
-	ActiveTime int    `gorm:"column:active_time"`
+	CreateTime int64  `gorm:"column:create_time"`
+	UpdateTime int64  `gorm:"column:update_time"`
+	ActiveTime int64  `gorm:"column:active_time"`
 	Country    string `gorm:"column:country"`
 	Region     string `gorm:"column:region"`
 	City       string `gorm:"column:city"`
