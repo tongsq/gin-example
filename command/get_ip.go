@@ -129,24 +129,25 @@ func main() {
 	defer db.Close()
 	db.SingularTable(true)
 	pool := component.NewTaskPool(20)
-	for i := 1; i < 2; i++ {
+	for i := 1; i < 20; i++ {
 		contentBody := getContentHtml(i)
 		if contentBody == nil {
 			continue
 		}
 		proxy_list := parseHtml(contentBody)
 		logger.Info("获取到ip:", proxy_list)
-		for _, proxy_arr := range proxy_list {
-			ip, port := proxy_arr[0], proxy_arr[1]
-			pool.RunTask(func() { checkProxyAndSave(ip, port, db) })
-		}
 		var wg sync.WaitGroup = sync.WaitGroup{}
 		wg.Add(1)
 		go func(wg *sync.WaitGroup) {
 			defer wg.Done()
-			logger.Info("wait 5s ...")
-			time.Sleep(time.Second * 5)
+			logger.Info("wait 20s ...")
+			time.Sleep(time.Second * 20)
 		}(&wg)
+		for _, proxy_arr := range proxy_list {
+			ip, port := proxy_arr[0], proxy_arr[1]
+			pool.RunTask(func() { checkProxyAndSave(ip, port, db) })
+		}
+
 		wg.Wait()
 	}
 	time.Sleep(time.Second * 50)
@@ -162,6 +163,7 @@ func checkProxyAndSave(host string, port string, db *gorm.DB) {
 	var status int8 = 1
 	if !result {
 		status = 0
+		return
 	}
 	var proxyModel model.Proxy
 	err := db.Where("host = ? AND port = ?", host, port).First(&proxyModel).Error
