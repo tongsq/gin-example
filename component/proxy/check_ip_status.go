@@ -13,6 +13,7 @@ func CheckIpStatus(host, port string) bool {
 	req, _ := http.NewRequest("GET", request_url, nil)
 	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.106 Safari/537.36")
 	proxyServer := fmt.Sprintf("http://%s:%s", host, port)
+	fmt.Println("start check: ", proxyServer)
 	proxyUrl, _ := url.Parse(proxyServer)
 	client := http.Client{
 		Transport: &http.Transport{Proxy: http.ProxyURL(proxyUrl)},
