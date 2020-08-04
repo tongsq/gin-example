@@ -129,7 +129,7 @@ func main() {
 	defer db.Close()
 	db.SingularTable(true)
 	pool := component.NewTaskPool(20)
-	for i := 1; i < 20; i++ {
+	for i := 1; i < 10; i++ {
 		contentBody := getContentHtml(i)
 		if contentBody == nil {
 			time.Sleep(time.Second * 5)
@@ -151,7 +151,7 @@ func main() {
 
 		wg.Wait()
 	}
-	time.Sleep(time.Second * 50)
+	time.Sleep(time.Second * 20)
 }
 
 func checkProxyAndSave(host string, port string, db *gorm.DB) {
