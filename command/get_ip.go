@@ -132,6 +132,7 @@ func main() {
 	for i := 1; i < 20; i++ {
 		contentBody := getContentHtml(i)
 		if contentBody == nil {
+			time.Sleep(time.Second * 5)
 			continue
 		}
 		proxy_list := parseHtml(contentBody)
