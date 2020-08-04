@@ -6,7 +6,9 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/gorm"
 	"github.com/tongsq/gin-example/component"
+	"github.com/tongsq/gin-example/component/logger"
 	"github.com/tongsq/gin-example/component/proxy"
+	_ "github.com/tongsq/gin-example/init"
 	"github.com/tongsq/gin-example/model"
 	"io"
 	"net/http"
@@ -27,12 +29,12 @@ func getContentHtml(i int) io.ReadCloser {
 	}
 	resp, err := client.Do(req)
 	if err != nil {
-		fmt.Println("http get error", err)
+		logger.Error("http get error", err)
 		return nil
 	}
 	if resp.StatusCode != 200 {
 		resp.Body.Close()
-		fmt.Println("http status error ", resp.StatusCode)
+		logger.Error("http status error ", resp.StatusCode)
 		return nil
 	}
 	//body, err := ioutil.ReadAll(resp.Body)
@@ -60,12 +62,12 @@ func getContentHtmlKuai(i int) io.ReadCloser {
 	}
 	resp, err := client.Do(req)
 	if err != nil {
-		fmt.Println("http get error", err)
+		logger.Error("http get error", err)
 		return nil
 	}
 	if resp.StatusCode != 200 {
 		resp.Body.Close()
-		fmt.Println("http status error ", resp.StatusCode)
+		logger.Error("http status error ", resp.StatusCode)
 		return nil
 	}
 	return resp.Body
@@ -76,7 +78,7 @@ func parseHtmlKuai(body io.ReadCloser) [][]string {
 
 	doc, err := goquery.NewDocumentFromReader(body)
 	if err != nil {
-		fmt.Println(err)
+		logger.Error(err)
 		return nil
 	}
 	var proxy_list [][]string
@@ -89,7 +91,7 @@ func parseHtmlKuai(body io.ReadCloser) [][]string {
 		proxy_port = strings.Trim(proxy_port, " ")
 		proxy_arr := []string{proxy_host, proxy_port}
 		if proxy_host == "" || proxy_port == "" {
-			fmt.Println("格式错误：", proxy_host, proxy_port)
+			logger.Error("格式错误：", proxy_host, proxy_port)
 		}
 		proxy_list = append(proxy_list, proxy_arr)
 	})
@@ -101,7 +103,7 @@ func parseHtml(body io.ReadCloser) [][]string {
 
 	doc, err := goquery.NewDocumentFromReader(body)
 	if err != nil {
-		fmt.Println(err)
+		logger.Error(err)
 		return nil
 	}
 	var proxy_list [][]string
@@ -111,7 +113,7 @@ func parseHtml(body io.ReadCloser) [][]string {
 		proxy_str = strings.Trim(proxy_str, " ")
 		proxy_arr := strings.Split(proxy_str, ":")
 		if len(proxy_arr) != 2 {
-			fmt.Println("格式错误:", proxy_str)
+			logger.Error("格式错误:", proxy_str)
 			return
 		}
 		proxy_list = append(proxy_list, proxy_arr)
@@ -126,19 +128,14 @@ func main() {
 	}
 	defer db.Close()
 	db.SingularTable(true)
-	for i := 1; i < 20; i++ {
-		contentBody := getContentHtmlKuai(i)
+	pool := component.NewTaskPool(20)
+	for i := 1; i < 2; i++ {
+		contentBody := getContentHtml(i)
 		if contentBody == nil {
 			continue
 		}
-		proxy_list := parseHtmlKuai(contentBody)
-		fmt.Println(proxy_list)
-		//for _, proxy_arr := range proxy_list {
-		//	result := proxy.CheckIpStatus(proxy_arr[0], proxy_arr[1])
-		//	fmt.Println(result, proxy_arr)
-		//}
-
-		pool := component.NewTaskPool(20)
+		proxy_list := parseHtml(contentBody)
+		logger.Info("获取到ip:", proxy_list)
 		for _, proxy_arr := range proxy_list {
 			ip, port := proxy_arr[0], proxy_arr[1]
 			pool.RunTask(func() { checkProxyAndSave(ip, port, db) })
@@ -147,7 +144,7 @@ func main() {
 		wg.Add(1)
 		go func(wg *sync.WaitGroup) {
 			defer wg.Done()
-			fmt.Println("wait 5s ...")
+			logger.Info("wait 5s ...")
 			time.Sleep(time.Second * 5)
 		}(&wg)
 		wg.Wait()
@@ -157,7 +154,11 @@ func main() {
 
 func checkProxyAndSave(host string, port string, db *gorm.DB) {
 	result := proxy.CheckIpStatus(host, port)
-	fmt.Println(result, host, port)
+	if result {
+		logger.Success(result, host, port)
+	} else {
+		logger.Warning(result, host, port)
+	}
 	var status int8 = 1
 	if !result {
 		status = 0
