@@ -12,7 +12,8 @@ var logger *log.Logger
 var errorLogger *log.Logger
 
 func init() {
-	errFile, err := os.OpenFile("/Users/tongsiqi/go/src/github.com/tongsq/gin-example/logs/errors.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	dir, _ := os.Getwd()
+	errFile, err := os.OpenFile(dir+"/errors.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	if err != nil {
 		log.Fatalln("打开日志文件失败：", err)
 	}
@@ -26,20 +27,36 @@ func Info(v ...interface{}) {
 }
 
 func Success(v ...interface{}) {
-	logger.Println("\x1b[0;32m", getFileInfo(), v, "\x1b[0m")
+	logger.Println(getLogContent("32", v)...)
 }
 
 func Warning(v ...interface{}) {
-	logger.Println("\x1b[0;33m", getFileInfo(), v, "\x1b[0m")
+	logger.Println(getLogContent("33", v)...)
 }
 
 func Error(v ...interface{}) {
-	logger.Println("\x1b[0;31m", getFileInfo(), v, "\x1b[0m")
-	errorLogger.Println(v)
+	logger.Println(getLogContent("31", v)...)
+	errorLogger.Println(getLogContent("", v)...)
+}
+
+func getLogContent(color string, v []interface{}) []interface{} {
+	content := []interface{}{}
+	if color != "" {
+		c := "\x1b[0;" + color + "m"
+		content = append(content, c)
+	}
+	content = append(content, getFileInfo())
+	for _, value := range v {
+		content = append(content, value)
+	}
+	if color != "" {
+		content = append(content, "\x1b[0m")
+	}
+	return content
 }
 
 func getFileInfo() string {
-	_, file, line, ok := runtime.Caller(2)
+	_, file, line, ok := runtime.Caller(3)
 	if !ok {
 		file = "???"
 		line = 0
