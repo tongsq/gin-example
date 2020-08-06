@@ -23,7 +23,7 @@ func init() {
 }
 
 func Info(v ...interface{}) {
-	logger.Println(getFileInfo(), v)
+	logger.Println(getLogContent("", v))
 }
 
 func Success(v ...interface{}) {
