@@ -14,12 +14,8 @@ import (
 )
 
 func main() {
-	db, err := gorm.Open("mysql", "python:123456@(127.0.0.1:3306)/py?charset=utf8&loc=Local")
-	if err != nil {
-		panic(err)
-	}
+	db := model.DB.New()
 	defer db.Close()
-	db.SingularTable(true)
 	pool := component.NewTaskPool(20)
 	for i := 1; i < 10; i++ {
 		contentBody := service.GetProxyService.GetContentHtml(i)
