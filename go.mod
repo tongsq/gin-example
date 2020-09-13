@@ -8,4 +8,5 @@ require (
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/jinzhu/gorm v1.9.15
 	github.com/spf13/cobra v1.0.0
+	golang.org/x/text v0.3.2
 )
