@@ -23,6 +23,7 @@ func (s *GetProxyNima) GetContentHtml(i int) io.ReadCloser {
 	client := http.Client{
 		Timeout: time.Second * 5,
 	}
+	logger.Info("get proxy from nimadaili", i)
 	resp, err := client.Do(req)
 	if err != nil {
 		logger.Error("http get error", err)

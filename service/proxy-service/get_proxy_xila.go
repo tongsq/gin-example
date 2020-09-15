@@ -23,6 +23,7 @@ func (s *GetProxyXila) GetContentHtml(i int) io.ReadCloser {
 	client := http.Client{
 		Timeout: time.Second * 5,
 	}
+	logger.Info("get proxy from xiladaili", i)
 	resp, err := client.Do(req)
 	if err != nil {
 		logger.Error("http get error", err)

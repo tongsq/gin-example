@@ -2,11 +2,13 @@ package cmd
 
 import (
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/jinzhu/gorm"
 	"github.com/spf13/cobra"
 	"github.com/tongsq/gin-example/component"
 	"github.com/tongsq/gin-example/component/logger"
 	"github.com/tongsq/gin-example/model"
 	"github.com/tongsq/gin-example/service"
+	proxy_service "github.com/tongsq/gin-example/service/proxy-service"
 	"sync"
 	"time"
 )
@@ -26,6 +28,16 @@ func getIp(cmd *cobra.Command, args []string) {
 	db := model.DB.New()
 	defer db.Close()
 	pool := component.NewTaskPool(20)
+
+	service.GetProxyService = &proxy_service.GetProxyXila{}
+	doGetProxy(pool, db)
+	service.GetProxyService = &proxy_service.GetProxyNima{}
+	doGetProxy(pool, db)
+
+	time.Sleep(time.Second * 20)
+}
+
+func doGetProxy(pool *component.Pool, db *gorm.DB) {
 	for i := 1; i < 10; i++ {
 		contentBody := service.GetProxyService.GetContentHtml(i)
 		if contentBody == nil {
@@ -48,5 +60,4 @@ func getIp(cmd *cobra.Command, args []string) {
 
 		wg.Wait()
 	}
-	time.Sleep(time.Second * 20)
 }
